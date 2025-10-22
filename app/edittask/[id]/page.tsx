@@ -1,7 +1,7 @@
 "use client";
 import React from "react";
 import Image from "next/image";
-import logo from "../../assets/logo.png";
+import logo from "@/assets/logo.png";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
@@ -18,28 +18,24 @@ export default function Page() {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string>("");
   const [oldImageUrl, setOldImageUrl] = useState<string>("");
-  
 
   useEffect(() => {
     async function fetchTask() {}
     fetchTask();
-  } , []);
+  }, []);
 
   async function handleUploadAndUpdate(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     // อัปโหลดรูปภาพใหม่ถ้ามีการเลือก
 
     //  อัปโหลดรูปภาพใหม่ถ้ามีการเลือก
-   
-      // อัปโหลดรูปภาพใหม่
-  
-    }
 
-    // อัปเดตข้อมูลงาน
+    // อัปโหลดรูปภาพใหม่
+  }
 
-    // นำทางกลับไปยังหน้ารายการงานทั้งหมด
-  
+  // อัปเดตข้อมูลงาน
 
+  // นำทางกลับไปยังหน้ารายการงานทั้งหมด
 
   return (
     <div className="flex flex-col w-3/4 mx-auto pb-20">
@@ -57,17 +53,12 @@ export default function Page() {
             <input
               type="text"
               className="border border-gray-300 rounded-lg p-2"
-              
-
               required // --- เพิ่ม required เพื่อบังคับให้กรอก ---
             />
           </div>
           <div className="flex flex-col mt-5">
             <label className="text-lg font-bold">รายละเอียด</label>
-            <textarea
-              className="border border-gray-300 rounded-lg p-2"
-              
-             ></textarea>
+            <textarea className="border border-gray-300 rounded-lg p-2"></textarea>
           </div>
 
           <div className="flex flex-col mt-5">
@@ -98,9 +89,7 @@ export default function Page() {
 
           <div className="flex flex-col mt-5">
             <label className="text-lg font-bold ">สถานะงาน</label>
-            <select
-              className="border border-gray-300 rounded-lg p-2"
-    >
+            <select className="border border-gray-300 rounded-lg p-2">
               <option value="not_completed">ยังไม่เสร็จสิ้น</option>
               <option value="completed">เสร็จสิ้น</option>
             </select>
@@ -124,4 +113,3 @@ export default function Page() {
     </div>
   );
 }
-
