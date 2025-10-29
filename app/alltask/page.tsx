@@ -1,11 +1,13 @@
 "use client";
- 
 import Image from "next/image";
 import logo from "./../../assets/logo.png";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { firebase } from "@/lib/firebaseConfig";
 import { collection, getDocs } from "firebase/firestore";
+import { deleteDoc, doc } from "firebase/firestore";
+import { supabase } from "@/lib/supabaseClient";
+
  
 //สร้างประเภทตัวแปรเพื่อเก็บข้อมูลที่ดึงมาจาก Firebase
 type Task = {
@@ -46,19 +48,41 @@ export default function Page() {
   }, []);
  
   //สร้างฟังก์ชัน ลบข้อมูลออกจากคอเล็คชัน Firebase
-  async function handleDeleteTaskClick(id: string, image_url: string) {
-    //แสดง Confirm dialog เพื่อยืนยันการลบ
-    if (confirm("คุณต้องการลบข้อมูลนี้ใช่หรือไม่ ?")) {
-      //--- ลบรูปออกจาก storage (ถ้ามีรูป) ----      
- 
-      //--- ลบข้อมูลออกจากคอเล็คชันบน Firebase ---
-     
- 
-      //--- ลบข้อมูลออกจากรายการที่แสดงบนหน้าจอ ---
-      setTasks(tasks.filter((task) => task.id !== id));
-    }
+  async function handleDeleteTaskClick(id: number, image_url: string) {
+if (confirm("คุณต้องการลบงานนี้ใช่หรือไม่?")) {
+  // ลบรูปภาพจาก Supabase Storage ถ้ามี
+  if (image_url != "" ) {
+    const image_name = image_url.split("/").pop() as string;
+    const { data, error } = await supabase.storage
+      .from("task_bk")
+      .remove([image_name]);
+
+    if (error) {
+      alert("พบข้อผิดพลาดในการลบรูปภาพ:");
+      console.log(error.message);
+      return;
+      }
+  }try {
+    // ลบงานจากฐานข้อมูล
+    await deleteDoc(doc(firebase, "task_tb", id.toString()));
+
+
+  // ลบงานจากฐานข้อมูล
+
+  // ตรวจสอบข้อผิดพลาดและแจ้งเตือนผู้ใช้
+  } catch (error) {
+    alert("พบข้อผิดพลาดในการลบงาน:");
+    console.log((error as Error).message);
+    return;
+  }
+  }
+
+
+  // ลบข้อมูลออกจากรายการที่แสดงผล
+    setTasks(tasks.filter((task) => task.id !== id.toString()));
   }
  
+  // แสดงผลหน้าเพจ
   return (
     <div className="flex flex-col w-8/12 mx-auto">
       {/* ส่วนหัว */}
@@ -135,7 +159,7 @@ export default function Page() {
                   </Link>
                   <button
                     onClick={() =>
-                      handleDeleteTaskClick(task.id, task.image_url)
+                      handleDeleteTaskClick(parseInt(task.id), task.image_url)
                     }
                     className="text-red-500 font-bold cursor-pointer"
                   >

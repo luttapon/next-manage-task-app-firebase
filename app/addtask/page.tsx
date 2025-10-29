@@ -77,7 +77,9 @@ export default function Page() {
           title: title,
           detail: detail,
           is_completed: is_completed,
-          image_url: image_url
+          image_url: image_url,
+          created_at: new Date().toISOString(),
+          update_at: new Date().toISOString(),
         })
  
         if(result){

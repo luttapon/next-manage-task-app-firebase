@@ -5,6 +5,9 @@ import logo from "@/assets/logo.png";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
+import { doc, getDoc, updateDoc } from "firebase/firestore";
+import { supabase } from "@/lib/supabaseClient";
+import { firebase } from "@/lib/firebaseConfig";
 
 // สร้างตัวแปร Page ที่เป็นฟังก์ชันคอมโพเนนต์
 
@@ -20,22 +23,81 @@ export default function Page() {
   const [oldImageUrl, setOldImageUrl] = useState<string>("");
 
   useEffect(() => {
-    async function fetchTask() {}
+    async function fetchTask() {
+      try{
+        const docRef = doc(firebase, "task_tb", id as string);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          setTitle(data.title);
+          setDetail(data.detail);
+          setIsCompleted(data.is_completed);
+          setOldImageUrl(data.image_url);
+          setPreviewUrl(data.image_url);
+        }
+      }catch (error) {
+       alert("พบข้อผิดพลาดในการดึงข้อมูลงาน:");
+       console.log((error as Error).message);
+       return;
+      }
+    }
     fetchTask();
-  }, []);
+  }, [id]);
 
   async function handleUploadAndUpdate(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    // อัปโหลดรูปภาพใหม่ถ้ามีการเลือก
+   let image_url = previewUrl || ""; // ใช้ URL เดิมถ้าไม่มีการเลือกใหม่
 
     //  อัปโหลดรูปภาพใหม่ถ้ามีการเลือก
+    if (imageFile) {
+      // ลบรูปภาพเก่าถ้ามี
+      if (oldImageUrl != "") {
+        const image_name = oldImageUrl.split("/").pop() as string;
+        const { data, error } = await supabase.storage
+          .from("task_bk")
+          .remove([image_name]);
 
-    // อัปโหลดรูปภาพใหม่
+        if (error) {
+          alert("พบข้อผิดพลาดในการลบรูปภาพ:");
+          console.log(error.message);
+          return;
+        }
+      }
+      // อัปโหลดรูปภาพใหม่
+      const new_image_file_name = `${Date.now()}-${imageFile.name}`;
+      const { data, error } = await supabase.storage
+        .from("task_bk")
+        .upload(new_image_file_name, imageFile);
+
+      if (error) {
+        alert("มีข้อผิดพลาดในการอัพโหลดรูปภาพ กรุณาลองใหม่อีกครั้ง");
+        console.log(error.message);
+        return;
+      } else {
+        const { data } = await supabase.storage
+          .from("task_bk")
+          .getPublicUrl(new_image_file_name);
+
+        image_url = data.publicUrl;
+      }
+    }
+    try {
+      await updateDoc(doc(firebase, "task_tb", id as string), {
+        title: title,
+        detail: detail,
+        is_completed: is_completed,
+        image_url: image_url,
+        update_at: new Date().toISOString(),
+
+      });
+      router.push("/");
+    }catch (error) {
+      alert("พบข้อผิดพลาดในการอัปเดตข้อมูลงาน:");
+      console.log((error as Error).message);
+      return;
   }
-
-  // อัปเดตข้อมูลงาน
-
-  // นำทางกลับไปยังหน้ารายการงานทั้งหมด
+}
+    // อัปเดตข้อมูลงานใน Firestore
 
   return (
     <div className="flex flex-col w-3/4 mx-auto pb-20">
